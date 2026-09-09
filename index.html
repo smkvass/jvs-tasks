@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Tasks</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <section class="hero">
+    <div class="hero-text">
+        <p class="small-title">SMAKOVA SAYA'S</p>
+
+        <h1>JavaScript<br>Refresher</h1>
+
+        <p class="description">
+            Learning, experimenting and building my JavaScript skills
+            one task at a time.
+        </p>
+
+        <a href="#task1-results" class="explore-btn">
+            ↓ Explore tasks
+        </a>
+    </div>
+
+    <div class="hero-card">
+        <span class="js-logo">JS</span>
+        <p> 12 Tasks </p>
+        <span> HTML • CSS • JavaScript </span>
+    </div>
+</section>
+    <!-- Task 1 -->
+    <section class="task">
+       
+        <!--<h2>Task 1 - Variables and Data Types</h2>-->
+        <div id="task1-results"></div>
+
+        <div class="theory">
+            <h3>Theory</h3>
+
+            <h4>1. What is the difference between let and const?</h4>
+            <p>let can be reassigned, while const cannot be reassigned.</p>
+
+            <h4>2. What does typeof null return?</h4>
+            <p>It returns "object".</p>
+
+            <h4>3. What are JavaScript primitive types?</h4>
+            <p>string, number, boolean, null, undefined, bigint, and symbol.</p>
+        </div>
+    </section>
+
+
+    <!-- Task 2 -->
+    <section class="task">
+        <!--<h3>Task 2 — Arrays</h3>-->
+
+        <div id="task2-results"></div>
+        
+
+
+        </div>
+    </section>
+
+    <section class="task">
+        <!--<h3>Task 3 — Arrays of Objects</h3>-->
+
+        <div id="task3-results"></div>
+
+
+        </div>
+    </section>
+
+    <section class="task">
+        <!--<h3>Task 4 — Objects</h3>-->
+
+        <div id="task4-results"></div>
+
+
+        </div>
+    </section>
+
+    <section class="task">
+        <!--<h3>Task 5 - Values and References</h3>-->
+
+        <div id="task5-results"></div>
+        <div class="theory">
+            <h3>Theory</h3>
+
+            <h4>Check what happens to original.Explain why.</h4>
+            <p>"copy" and "original" refer to the same object, so modifying "copy" also modifies "original".</p>
+
+            <h4>What happens to the original "city"?</h4>
+            <p>City Almaty has changed to London.</p>
+
+            <h4>Why?</h4>
+            <p>Because the spread operator copies only the top level, while the address remains a shared reference.</p>
+
+        </div>
+    </section>
+
+    <section class="task">
+        <!--<h3>Task 6 - Functions</h3>-->
+
+        <div id="task6-results"></div>
+    </section>
+
+
+    <section class="task">
+        <!--<h3>Task 7 - Functions as Values</h3>-->
+
+        <div id="task7-results"></div>
+        <div class="theory">
+            <h3>Theory</h3>
+
+            <h4>Can functions be stored in variables?</h4>
+            <p>Yes, functions can be stored in variables. This allows us to use the function through the variable.</p>
+
+            <h4>Can functions be passed to other functions?</h4>
+            <p>Yes, functions can be passed to other functions. This allows one function to use another function.</p>
+
+            <h4>What is the difference between add and add()?</h4>
+            <p>add refers to the function itself, while add() calls the function and returns its result.</p>
+        </div>
+
+    </section>
+
+
+    <section class="task">
+        <!--<h3>Task 8 - Scope</h3>-->
+
+        <div id="task8-results"></div>
+        <div class="theory">
+        <h3>Theory</h3>
+
+        <h4>Global scope</h4>
+        <p>A variable in global scope can be accessed from anywhere in the program.</p>
+
+        <h4>Function scope</h4>
+        <p>A variable in function scope can only be accessed inside the function.</p>
+
+        <h4>Block scope</h4>
+        <p>A variable in block scope can only be accessed inside a block, such as an if statement.</p>
+
+        <h4>Difference between var, let, and const</h4>
+        <p>var, let, and const: var has function scope, while let and const have block scope. let can be changed, but const cannot be reassigned.</p>
+        </div>
+    </section>
+
+    <section class="task">
+        <!--<h3>Task 9 - Closure</h3>-->
+        <div id="task9-results">
+
+        <h3>Theory</h3>
+        <h4>Explain briefly why the inner function can still access variables from the outer function.</h4>
+        <p>The inner function remembers the variables from its outer function. This is called a closure.</p>
+        </div>
+    </section>
+
+    <section class="task">
+        <!--<h3>Task 10 - Destructuring, Spread and Rest</h3>-->
+        <div id="task10-results"></div>
+    </section>
+
+    <section class="task">
+        <!--<h3>Task 11 - Optional Chaining and Default Values</h3>-->
+        <div id="task11-results"></div>
+
+    </section>
+
+    <section class="task">
+        <div id="task12-results"></div>
+    </section>
+
+
+    <script src="./script.js"></script>
+
+</body>
+</html>
