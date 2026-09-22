@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JavaScript Async Tasks</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div class="container">
+
+        <h1>Smakova Saya's JavaScript Async Tasks</h1>
+        <section>
+            <h2>1. Tasks</h2>
+
+            <div class="tasks">
+
+                <!-- Users -->
+                <div class="task-card">
+                    <h3>Load Users</h3>
+
+                    <p>
+                        Status:
+                        <span id="users-status">Idle</span>
+                    </p>
+
+                    <p>
+                        Execution count:
+                        <span id="users-count">0</span>
+                    </p>
+
+                    <p>
+                        Loading time:
+                        <span id="users-time">-</span>
+                    </p>
+
+                    <button id="users-run">Run</button>
+                    <button id="users-reset">Reset</button>
+                </div>
+
+                <!-- Posts -->
+                <div class="task-card">
+                    <h3>Load Posts</h3>
+
+                    <p>
+                        Status:
+                        <span id="posts-status">Idle</span>
+                    </p>
+
+                    <p>
+                        Execution count:
+                        <span id="posts-count">0</span>
+                    </p>
+
+                    <p>
+                        Loading time:
+                        <span id="posts-time">-</span>
+                    </p>
+
+                    <button id="posts-run">Run</button>
+                    <button id="posts-reset">Reset</button>
+                </div>
+
+                <!-- Comments -->
+                <div class="task-card">
+                    <h3>Load Comments</h3>
+
+                    <p>
+                        Status:
+                        <span id="comments-status">Idle</span>
+                    </p>
+
+                    <p>
+                        Execution count:
+                        <span id="comments-count">0</span>
+                    </p>
+
+                    <p>
+                        Loading time:
+                        <span id="comments-time">-</span>
+                    </p>
+
+                    <button id="comments-run">Run</button>
+                    <button id="comments-reset">Reset</button>
+                </div>
+
+            </div>
+
+            <button id="run-all" class="main-button">
+                Run All Tasks
+            </button>
+
+            <p id="all-result"></p>
+
+        </section>
+
+
+        <!-- SEQUENTIAL VS CONCURRENT -->
+
+        <section>
+            <h2>2. Sequential vs Concurrent</h2>
+
+            <button id="sequential-button">
+                Run Sequential
+            </button>
+
+            <button id="concurrent-button">
+                Run Concurrent
+            </button>
+
+            <div class="comparison">
+
+                <div>
+                    <h3>Sequential</h3>
+                    <p id="sequential-result">-</p>
+                </div>
+
+                <div>
+                    <h3>Concurrent</h3>
+                    <p id="concurrent-result">-</p>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- EVENT LOOP -->
+
+        <section>
+            <h2>3. Event Loop Demo</h2>
+
+            <p>
+                Open the browser console before pressing the button.
+            </p>
+
+            <button id="event-loop-button" class="main-button">
+                Run Event Loop Demo
+            </button>
+
+            <div class="expected">
+                <h3>Expected order</h3>
+
+
+                <ol>
+                    <li>Sync code</li>
+                    <li>Promise callback</li>
+                    <li>Async function continuation</li>
+                    <li>Promise callback 2</li>
+                    <li>Timer 1</li>
+                    <li>Timer 2</li>
+                </ol>
+            </div>
+
+        </section>
+
+    </div>
+
+    <script src="task.js"></script>
+
+</body>
+</html>
