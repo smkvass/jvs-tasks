@@ -1,4 +1,4 @@
-import photo5 from './assets/IMG_2755.JPG'
+import photo5 from './assets/IMG_2755.jpg'
 import photo6 from './assets/IMG_4142 (1).JPG'
 import photo7 from './assets/IMG_1998.JPG'
 import photo8 from './assets/IMG_4015.JPG'
