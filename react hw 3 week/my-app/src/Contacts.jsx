@@ -8,7 +8,6 @@ function Contacts(){
                     <a href="https://github.com/smkvass" target="_blank"> Git Hub</a>
                     <a href="https://t.me/smkvass" target="_blank">Telegram</a>
                     <p>Web • Design • Photography • Video</p>
-
             </div>
         </section>
     )

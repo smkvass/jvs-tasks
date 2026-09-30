@@ -54,7 +54,7 @@
 
 .about-photos {
   display: flex;
-  gap: 10px;
+  gap: 30px;
 }
 
 .about-photos img {
