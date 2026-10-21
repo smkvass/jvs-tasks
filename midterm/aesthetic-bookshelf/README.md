@@ -1,16 +1,23 @@
-# React + Vite
+# Aesthetic Bookshelf
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A React single-page app for browsing recent books about fashion, photography,
+art, design and magazines, and for keeping a personal shelf.
 
-Currently, two official plugins are available:
+**Live demo:** https://jvs-tasks-8p1y.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
+- Catalog of books from the Open Library API (published 2010 and later)
+- Search, category filter, sorting (relevance, newest, oldest, top rated)
+- Server-side pagination
+- Book detail view with description loaded from the API
+- "My shelf": controlled form to add your own books (title, author, year, cover URL), saved in localStorage
+- Loading, error, empty and success states
+- Responsive layout
 
-## React Compiler
+## Tech
+- React (Vite), JavaScript
+- Open Library API (https://openlibrary.org/developers/api)
+- `useState`, `useEffect` with `AbortController` cleanup to avoid race conditions
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Components
+`Catalog`, `SearchBar`, `BookCard`, `BookDetail`, `Pagination`, `AddBookForm`
