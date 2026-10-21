@@ -1,13 +1,20 @@
 import QuestCard from "./QuestCard";
 
-function QuestList({ quests, changeStatus, deleteQuest, resetQuest }) {
+function QuestList({
+  quests,
+  changeStatus,
+  changeProgress,
+  deleteQuest,
+  resetQuest
+}) {
   return (
     <div className="quest-list">
       {quests.map((quest) => (
         <QuestCard
-          key={`${quest.id}-${quest.reset || 0}`}
+          key={`${quest.id}-${quest.reset}`}
           quest={quest}
           changeStatus={changeStatus}
+          changeProgress={changeProgress}
           deleteQuest={deleteQuest}
           resetQuest={resetQuest}
         />

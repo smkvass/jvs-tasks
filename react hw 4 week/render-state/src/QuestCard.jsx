@@ -1,20 +1,25 @@
-import { useState } from "react";
-
-function QuestCard({ quest, changeStatus, deleteQuest, resetQuest}) {
-  const [progress, setProgress] = useState(0);
+function QuestCard({
+  quest,
+  changeStatus,
+  changeProgress,
+  deleteQuest,
+  resetQuest
+}) {
 
   const displayProgress =
-    quest.status === "Completed" ? 100 : progress;
+    quest.status === "Completed"
+      ? 100
+      : quest.progress;
 
   const handleStatusChange = (newStatus) => {
-  if (newStatus === "Not started") {
-    setProgress(0);
-  }
+    changeStatus(quest.id, newStatus);
+  };
 
-  changeStatus(quest.id, newStatus);
-};
-
-  console.log("QuestCard rendered:", quest.title, progress);
+  console.log(
+    "QuestCard rendered:",
+    quest.title,
+    quest.progress
+  );
 
   return (
     <div className="quest-card">
@@ -28,6 +33,7 @@ function QuestCard({ quest, changeStatus, deleteQuest, resetQuest}) {
       <div className="card-content">
 
         <div className="card-top">
+
           <span className="category">
             {quest.category}
           </span>
@@ -35,12 +41,18 @@ function QuestCard({ quest, changeStatus, deleteQuest, resetQuest}) {
           <span className="quest-number">
             0{quest.id}
           </span>
+
         </div>
 
         <h2>{quest.title}</h2>
 
         <div className="card-info">
-          <span className={`status ${quest.status.toLowerCase().replace(" ", "-")}`}>
+
+          <span
+            className={`status ${quest.status
+              .toLowerCase()
+              .replace(" ", "-")}`}
+          >
             {quest.status === "Completed" && "✓ "}
             {quest.status === "In progress" && "● "}
             {quest.status === "Not started" && "○ "}
@@ -50,6 +62,7 @@ function QuestCard({ quest, changeStatus, deleteQuest, resetQuest}) {
           <span className="difficulty">
             {quest.difficulty}
           </span>
+
         </div>
 
         <div className="progress-section">
@@ -60,10 +73,14 @@ function QuestCard({ quest, changeStatus, deleteQuest, resetQuest}) {
           </div>
 
           <div className="progress-bar">
+
             <div
               className="progress-fill"
-              style={{ width: `${displayProgress}%` }}
+              style={{
+                width: `${displayProgress}%`
+              }}
             ></div>
+
           </div>
 
         </div>
@@ -71,15 +88,15 @@ function QuestCard({ quest, changeStatus, deleteQuest, resetQuest}) {
         <div className="card-actions">
 
           <button
-            onClick={() =>
-              setProgress(Math.min(progress + 10, 100))
-            }
+            onClick={() => changeProgress(quest.id)}
           >
             +10%
           </button>
 
-          <button onClick={() => resetQuest(quest.id)}>
-          Reset
+          <button
+            onClick={() => resetQuest(quest.id)}
+          >
+            Reset
           </button>
 
           <button
@@ -94,21 +111,27 @@ function QuestCard({ quest, changeStatus, deleteQuest, resetQuest}) {
         <div className="status-actions">
 
           <button
-          onClick={() => handleStatusChange("Not started")}
+            onClick={() =>
+              handleStatusChange("Not started")
+            }
           >
             Not started
           </button>
 
           <button
-          onClick={() => handleStatusChange("In progress")}
+            onClick={() =>
+              handleStatusChange("In progress")
+            }
           >
             In progress
           </button>
 
           <button
-          onClick={() => handleStatusChange("Completed")}
+            onClick={() =>
+              handleStatusChange("Completed")
+            }
           >
-          Completed
+            Completed
           </button>
 
         </div>
