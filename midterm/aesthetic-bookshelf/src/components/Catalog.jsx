@@ -37,12 +37,12 @@ function Catalog() {
   const [selected, setSelected] = useState(null);
   const [myBooks, setMyBooks] = useState(loadMyBooks);
 
-  // сохраняем мою полку
+  
   useEffect(() => {
     localStorage.setItem("myBooks", JSON.stringify(myBooks));
   }, [myBooks]);
 
-  // загрузка книг
+  
   useEffect(() => {
     const controller = new AbortController();
     setLoading(true);

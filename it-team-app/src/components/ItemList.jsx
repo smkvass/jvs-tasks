@@ -18,5 +18,5 @@ export default function ItemList({ items, selectedId, busyIds, onSelect }) {
         </li>
       ))}
     </ul>
-  );
+  )
 }

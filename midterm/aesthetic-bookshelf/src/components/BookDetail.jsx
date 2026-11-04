@@ -5,7 +5,7 @@ function BookDetail({ book, onBack }) {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // свои книги ("my-...") есть только у тебя, на сервере их нет
+    
     if (!book.key.startsWith("/works/")) return;
 
     const controller = new AbortController();

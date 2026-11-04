@@ -26,7 +26,7 @@ export default function ItemDetails({ item, busy, onEdit, onComplete, onDelete }
         ))}
       </dl>
       <div className="actions">
-        {/* pass the whole item: its id is captured at click time */}
+        {}
         <button
           className="primary"
           disabled={busy || item.status === "on_leave"}
