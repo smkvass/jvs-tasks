@@ -10,6 +10,9 @@ const MemberDetails = lazy(() => import("./pages/MemberDetails"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const Login = lazy(() => import("./pages/Login"));
 const NotFound = lazy(() => import("./pages/NotFound"));
+const Signup = lazy(() => import("./pages/SignUp"));
+const Profile = lazy(() => import("./pages/Profile"));
+import ProtectedRoute from "./components/ProtectedRoutes";
 
 const router = createBrowserRouter([
   {
@@ -72,6 +75,24 @@ const router = createBrowserRouter([
           </Suspense>
         ),
       },
+      {
+  path: "signup",
+  element: (
+    <Suspense fallback={<Loader />}>
+      <Signup />
+    </Suspense>
+  ),
+},
+{
+  path: "profile",
+  element: (
+    <ProtectedRoute>
+      <Suspense fallback={<Loader />}>
+        <Profile />
+      </Suspense>
+    </ProtectedRoute>
+  ),
+},
     ],
   },
 ]);

@@ -1,156 +1,149 @@
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import Loader from "../components/Loader";
 import { getItem, updateItem } from "../services/Service.js";
 
 export default function MemberDetails() {
   const { id } = useParams();
-
-  const [member, setMember] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const queryClient = useQueryClient();
 
   const [newStatus, setNewStatus] = useState("");
-  const [saving, setSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
+  const {
+    data: member,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["team-member", id],
+    queryFn: () => getItem(id),
+  });
+
+
+  const updateMutation = useMutation({
+    mutationFn: (status) => updateItem(id, { status }),
+
+    onSuccess: (updatedMember) => {
+      queryClient.setQueryData(
+        ["team-member", id],
+        updatedMember
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: ["team"],
+      });
+
+      setSaveMessage("Status updated successfully!");
+    },
+
+    onError: (err) => {
+      setSaveMessage("Error: " + err.message);
+    },
+  });
+
+  
   useEffect(() => {
-    let ignore = false;
-
-    async function loadMember() {
-      setLoading(true);
-      setError("");
-
-      try {
-        const result = await getItem(id);
-
-        if (!ignore) {
-          setMember(result);
-          setNewStatus(result.status);
-        }
-      } catch (err) {
-        if (!ignore) {
-          setError(err.message);
-        }
-      } finally {
-        if (!ignore) {
-          setLoading(false);
-        }
-      }
+    if (member) {
+      setNewStatus(member.status);
     }
+  }, [member]);
 
-    loadMember();
+  async function handleSave() {
+    setSaveMessage("");
+    updateMutation.mutate(newStatus);
+  }
 
-    return () => {
-      ignore = true;
-    };
-  }, [id]);
-
-  if (loading) return <Loader />;
-  if (error) return <p>Error: {error}</p>;
+  if (isLoading) return <Loader />;
+  if (isError) return <p>Error: {error.message}</p>;
   if (!member) return <h2>Member not found</h2>;
 
-async function handleSave() {
-  setSaving(true);
-  setSaveMessage("");
+  return (
+    <div className="member-details">
+      <Link className="back-link" to="/team">
+        ← Back to Team
+      </Link>
 
-  try {
-    await updateItem(id, { status: newStatus });
+      <div className="profile-card">
+        <div className="profile-header">
+          <div className="profile-avatar">
+            {member.name.charAt(0)}
+          </div>
 
-    const updatedMember = await getItem(id);
-    setMember(updatedMember);
-    setNewStatus(updatedMember.status);
+          <div>
+            <h1>{member.name}</h1>
+            <p>{member.role}</p>
 
-    setSaveMessage("Status updated successfully!");
-  } catch (err) {
-    setSaveMessage("Error: " + err.message);
-  } finally {
-    setSaving(false);
-  }
-}
-
-return (
-  
-  <div className="member-details">
-    <Link className="back-link" to="/team">
-      ← Back to Team
-    </Link>
-
-    <div className="profile-card">
-      <div className="profile-header">
-        <div className="profile-avatar">
-          {member.name.charAt(0)}
+            <span className={`badge ${member.status || "available"}`}>
+              {(member.status || "available").replace("_", " ")}
+            </span>
+          </div>
         </div>
 
-        <div>
-          <h1>{member.name}</h1>
-          <p>{member.role}</p>
-          <span className={`badge ${member.status || "available"}`}>
-            {(member.status || "available").replace("_", " ")}
-          </span>
-        </div>
-      </div>
+        <div className="profile-info">
+          <div>
+            <span>Location</span>
+            <strong>{member.location}</strong>
+          </div>
 
-      <div className="profile-info">
-        <div>
-          <span>Location</span>
-          <strong>{member.location}</strong>
-        </div>
+          <div>
+            <span>Change status</span>
 
-        <div>
-  <span>Change status</span>
+            <select
+              value={newStatus}
+              onChange={(e) => setNewStatus(e.target.value)}
+            >
+              <option value="available">Available</option>
+              <option value="working">Working</option>
+              <option value="on_leave">On Leave</option>
+            </select>
 
-  <select
-    value={newStatus}
-    onChange={(e) => setNewStatus(e.target.value)}
-  >
-    <option value="available">Available</option>
-    <option value="working">Working</option>
-    <option value="on_leave">On Leave</option>
-  </select>
+            <button
+              onClick={handleSave}
+              disabled={
+                updateMutation.isPending ||
+                newStatus === member.status
+              }
+            >
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </button>
 
-  <button
-    onClick={handleSave}
-    disabled={saving || newStatus === member.status}
-  >
-    {saving ? "Saving..." : "Save Changes"}
-  </button>
+            {saveMessage && <p>{saveMessage}</p>}
+          </div>
 
-  {saveMessage && <p>{saveMessage}</p>}
-</div>
+          <div>
+            <span>Experience</span>
+            <strong>{member.experience} years</strong>
+          </div>
 
-        <div>
-          <span>Experience</span>
-          <strong>{member.experience} years</strong>
-        </div>
+          <div>
+            <span>Skills</span>
+            <strong>
+              {Array.isArray(member.skills)
+                ? member.skills.join(", ")
+                : member.skills || "Not specified"}
+            </strong>
+          </div>
 
-        <div>
-          <span>Skills</span>
-          <strong>
-            {Array.isArray(member.skills)
-              ? member.skills.join(", ")
-              : member.skills || "Not specified"}
-          </strong>
-        </div>
+          <div>
+            <span>Joined</span>
+            <strong>{member.joinedAt || "Not specified"}</strong>
+          </div>
 
-        <div>
-          <span>Joined</span>
-          <strong>{member.joinedAt || "Not specified"}</strong>
-        </div>
+          <div>
+            <span>Tasks completed</span>
+            <strong>{member.tasksCompleted ?? 0}</strong>
+          </div>
 
-        <div>
-          <span>Tasks completed</span>
-          <strong>{member.tasksCompleted ?? 0}</strong>
-        </div>
-
-        <div>
-          <span>Description</span>
-          <strong>{member.description || "Not specified"}</strong>
+          <div>
+            <span>Description</span>
+            <strong>{member.description || "Not specified"}</strong>
+          </div>
         </div>
       </div>
     </div>
-  </div>
-);
-
+  );
 }

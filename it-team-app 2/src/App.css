@@ -1269,3 +1269,218 @@ main {
   }
 }
 
+
+/* AUTH PAGES */
+
+.login-page,
+.signup-page,
+.profile-page {
+  width: 100%;
+  max-width: 440px;
+  margin: 55px auto;
+  padding: 32px;
+  background: #ffffff;
+  border: 1px solid #e4e8ff;
+  border-radius: 18px;
+  box-shadow: 0 8px 25px rgba(23, 37, 84, 0.07);
+  box-sizing: border-box;
+}
+
+.login-page h1,
+.signup-page h1,
+.profile-page h1 {
+  color: #172554;
+  font-size: 28px;
+  margin: 0 0 10px;
+}
+
+.login-page > p,
+.signup-page > p {
+  color: #68738b;
+  font-size: 14px;
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+
+/* FORMS */
+
+.login-page form,
+.signup-page form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.login-page input,
+.signup-page input {
+  width: 100%;
+  padding: 13px 15px;
+  border: 1px solid #e4e8ff;
+  border-radius: 9px;
+  background: #fafbff;
+  color: #172554;
+  font-size: 14px;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.login-page input:focus,
+.signup-page input:focus {
+  outline: none;
+  border-color: #5263df;
+  box-shadow: 0 0 0 3px rgba(82, 99, 223, 0.1);
+}
+
+/* BUTTONS */
+
+.login-page button,
+.signup-page button,
+.profile-page button {
+  min-height: 43px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: 9px;
+  background: #5263df;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.2s;
+}
+
+.login-page button:hover,
+.signup-page button:hover,
+.profile-page button:hover {
+  background: #3949bd;
+  transform: translateY(-1px);
+}
+
+.login-page button:disabled,
+.signup-page button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* GOOGLE BUTTON */
+
+.login-page > button,
+.signup-page > button {
+  width: 100%;
+  margin-top: 15px;
+  background: #f0f2ff;
+  color: #3949bd;
+  border: 1px solid #e4e8ff;
+}
+
+.login-page > button:hover,
+.signup-page > button:hover {
+  background: #e4e8ff;
+}
+
+/* ERROR */
+
+.login-page .error,
+.signup-page .error {
+  margin-top: 15px;
+  color: #dc4545;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+/* PROFILE */
+
+.profile-page {
+  max-width: 520px;
+}
+
+.profile-page h1 {
+  margin-bottom: 25px;
+}
+
+.profile-page p {
+  padding: 14px;
+  margin: 0 0 12px;
+  background: #f0f2ff;
+  border: 1px solid #e4e8ff;
+  border-radius: 9px;
+  color: #68738b;
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.profile-page p strong {
+  color: #172554;
+}
+
+.profile-page button {
+  width: 100%;
+  margin-top: 15px;
+}
+
+/* NAVBAR LOGOUT */
+
+.navbar .nav-links button {
+  min-height: 36px;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  background: #5263df;
+  color: white;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.navbar .nav-links button:hover {
+  background: #3949bd;
+}
+
+/* MOBILE */
+
+@media (max-width: 600px) {
+  .login-page,
+  .signup-page,
+  .profile-page {
+    margin: 30px auto;
+    padding: 24px;
+  }
+}
+
+/* NAVBAR ALIGNMENT */
+
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.navbar .nav-links {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.navbar .nav-links a {
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
+
+.navbar .nav-links button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+  min-height: 36px;
+  padding: 0 16px;
+  margin: 0;
+  line-height: 1;
+  white-space: nowrap;
+  box-sizing: border-box;
+}

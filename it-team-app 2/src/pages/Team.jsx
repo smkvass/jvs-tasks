@@ -1,28 +1,25 @@
-import { useEffect, useState } from "react";
+
+import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 import Card from "../components/Card";
 import Loader from "../components/Loader";
+import ItemForm from "../components/ItemForm.jsx";
 
 import {
   createItem,
   updateItem,
   deleteItem,
-  getItemsList
+  getItemsList,
 } from "../services/Service.js";
-import ItemForm from "../components/ItemForm.jsx";
 
 export default function Team() {
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-
-  const [totalPages, setTotalPages] = useState(1);
-  const [reloadKey, setReloadKey] = useState(0);
+  const queryClient = useQueryClient();
 
   const [showForm, setShowForm] = useState(false);
-  const [submitting, setSubmitting] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [formError, setFormError] = useState("");
 
   const queryString = searchParams.toString();
@@ -33,90 +30,89 @@ export default function Team() {
   const sort = searchParams.get("sort") || "name";
   const page = Number(searchParams.get("page")) || 1;
 
-  const [editingItem, setEditingItem] = useState(null);
+  const {
+    data,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["team", queryString],
+    queryFn: () => getItemsList(queryString),
+  });
 
-  useEffect(() => {
-  let ignore = false;
+  const items = data?.data || [];
+  const totalPages = data?.totalPages || 1;
 
-  async function loadItems() {
-    setLoading(true);
-    setError("");
-
-    try {
-      const result = await getItemsList(queryString);
-
-      if (!ignore) {
-        setItems(result.data);
-        setTotalPages(result.totalPages);
+  const saveMutation = useMutation({
+    mutationFn: ({ id, values }) => {
+      if (id) {
+        return updateItem(id, values);
       }
-    } catch (err) {
-      if (!ignore) setError(err.message);
-    } finally {
-      if (!ignore) setLoading(false);
-    }
-  }
+      return createItem(values);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["team"] });
+    },
+  });
 
-  loadItems();
-
-  return () => {
-    ignore = true;
-  };
-}, [queryString, reloadKey]);
+  
+  const deleteMutation = useMutation({
+    mutationFn: deleteItem,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["team"] });
+    },
+  });
 
   function updateFilter(key, value) {
-  const params = new URLSearchParams(searchParams);
+    const params = new URLSearchParams(searchParams);
 
-  if (value === "all" || value === "") {
-    params.delete(key);
-  } else {
-    params.set(key, value);
-  }
-
-  if (key !== "page") {
-    params.delete("page");
-  }
-
-  setSearchParams(params);
-}
-
-async function handleSubmit(values) {
-  setSubmitting(true);
-  setFormError("");
-
-  try {
-    if (editingItem) {
-      await updateItem(editingItem.id, values);
+    if (value === "all" || value === "") {
+      params.delete(key);
     } else {
-      await createItem(values);
+      params.set(key, value);
     }
 
-    setShowForm(false);
-    setEditingItem(null);
-    setReloadKey((prev) => prev + 1);
-  } catch (err) {
-    setFormError(err.message || "Failed to save member");
-  } finally {
-    setSubmitting(false);
+    if (key !== "page") {
+      params.delete("page");
+    }
+
+    setSearchParams(params);
   }
-}
 
-async function handleDelete(id) {
-  const confirmed = window.confirm(
-    "Are you sure you want to delete this member?"
-  );
+  async function handleSubmit(values) {
+    setFormError("");
 
-  if (!confirmed) return;
+    try {
+      await saveMutation.mutateAsync({
+        id: editingItem?.id,
+        values,
+      });
 
-  try {
-    await deleteItem(id);
-    setReloadKey((prev) => prev + 1);
-  } catch (err) {
-    setFormError(err.message || "Failed to delete member");
+      setShowForm(false);
+      setEditingItem(null);
+    } catch (err) {
+      setFormError(err.message || "Failed to save member");
+    }
   }
-}
+
+  async function handleDelete(id) {
+    const confirmed = window.confirm(
+      "Are you sure you want to delete this member?"
+    );
+
+    if (!confirmed) return;
+
+    setFormError("");
+
+    try {
+      await deleteMutation.mutateAsync(id);
+    } catch (err) {
+      setFormError(err.message || "Failed to delete member");
+    }
+  }
 
   return (
-    
     <div className="team-page">
       <h1>Our Team</h1>
       <p className="muted">Manage your startup team members.</p>
@@ -162,82 +158,79 @@ async function handleDelete(id) {
         </select>
       </div>
 
-      
-      <button onClick={() => {
-  setEditingItem(null);
-  setFormError("");
-  setShowForm(true);
-}}>
-  + Add Member
-</button>
+      <button
+        onClick={() => {
+          setEditingItem(null);
+          setFormError("");
+          setShowForm(true);
+        }}
+      >
+        + Add Member
+      </button>
 
-      {/* ФОРМА */}
       {showForm && (
         <ItemForm
           initial={editingItem}
-          submitting={submitting}
+          submitting={saveMutation.isPending}
           error={formError}
           onSubmit={handleSubmit}
           onCancel={() => {
-    setShowForm(false);
-    setEditingItem(null);
-  }}
+            setShowForm(false);
+            setEditingItem(null);
+          }}
         />
       )}
 
+      {isLoading && <Loader />}
 
-      {loading && <Loader />}
+      {isError && (
+        <div className="error-message">
+          <p>{error.message}</p>
+          <button className="retry-button" onClick={() => refetch()}>
+            Retry
+          </button>
+        </div>
+      )}
 
-      {error && (
-  <div className="error-message">
-    <p>{error}</p>
-    <button
-      className="retry-button"
-      onClick={() => setReloadKey((prev) => prev + 1)}
-    >
-      Retry
-    </button>
-  </div>
-)}
-
-      {!loading && !error && items.length === 0 && (
+      {!isLoading && !isError && items.length === 0 && (
         <p className="state">No team members found.</p>
       )}
 
-      {!loading && !error && (
+      {!isLoading && !isError && (
         <>
           <div className="team-grid">
             {items.map((item) => (
-  <Card
-    key={item.id}
-    item={item}
-    onEdit={(member) => {
-      setEditingItem(member);
-      setShowForm(true);
-    }}
-    onDelete={handleDelete}
-  />
-))}
+              <Card
+                key={item.id}
+                item={item}
+                onEdit={(member) => {
+                  setEditingItem(member);
+                  setFormError("");
+                  setShowForm(true);
+                }}
+                onDelete={handleDelete}
+              />
+            ))}
           </div>
 
           <div className="pagination">
-              <button
-                  disabled={page <= 1}
-                    onClick={() => updateFilter("page", page - 1)}
-              >
+            <button
+              disabled={page <= 1}
+              onClick={() => updateFilter("page", page - 1)}
+            >
               Previous
-              </button>
+            </button>
 
-              <span>
+            <span>
               Page {page} of {totalPages}
-              </span>
+            </span>
 
-              <button
+            <button
               disabled={page >= totalPages}
               onClick={() => updateFilter("page", page + 1)}
-              >
+            >
               Next
-              </button>
+            </button>
           </div>
         </>
       )}
