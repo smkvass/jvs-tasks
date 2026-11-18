@@ -1,8 +1,8 @@
-
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getItemsList } from "../services/Service.js";
 import Loader from "../components/Loader";
+import PublicApiDemo from "../components/PublicApiDemo";
 
 export default function Dashboard() {
   const [items, setItems] = useState([]);
@@ -161,6 +161,8 @@ export default function Dashboard() {
       <p>
         <Link to="/team">View All Team Members →</Link>
       </p>
+
+      <PublicApiDemo />
     </div>
   );
 }

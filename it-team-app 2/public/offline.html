@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#1e293b" />
+
+  <title>Offline | IT Team Manager</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+      background: #f1f5f9;
+      color: #1e293b;
+    }
+
+    .offline-container {
+      width: 100%;
+      max-width: 420px;
+      padding: 40px 25px;
+      text-align: center;
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    .offline-icon {
+      font-size: 55px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: 26px;
+      margin-bottom: 12px;
+    }
+
+    p {
+      color: #64748b;
+      line-height: 1.6;
+      margin-bottom: 25px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background: #1e293b;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #334155;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="offline-container">
+    <div class="offline-icon">📡</div>
+
+    <h1>You're Offline</h1>
+
+    <p>
+      You've lost your internet connection...
+      Please check your connection and try again...
+    </p>
+
+    <button onclick="window.location.reload()">
+      Retry Connection
+    </button>
+  </main>
+
+  <script>
+    window.addEventListener("online", () => {
+      window.location.href = "/";
+    });
+  </script>
+</body>
+</html>

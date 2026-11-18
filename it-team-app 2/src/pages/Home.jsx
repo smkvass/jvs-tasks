@@ -1,5 +1,7 @@
 import { Link } from "react-router-dom";
-import teamImage from "../assets/team.jpg";
+//import teamImage from "../assets/team.jpg";
+
+const teamImage = "/assets/team.jpg";
 
 export default function Home() {
   return (

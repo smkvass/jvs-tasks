@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -12,9 +12,30 @@ import {
   updateItem,
   deleteItem,
   getItemsList,
+  getCachedTeamList,
 } from "../services/Service.js";
 
 export default function Team() {
+  const [isOnline, setIsOnline] = useState(navigator.onLine);
+
+  useEffect(() => {
+    function handleOnline() {
+      setIsOnline(true);
+    }
+
+    function handleOffline() {
+      setIsOnline(false);
+    }
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
@@ -38,7 +59,36 @@ export default function Team() {
     refetch,
   } = useQuery({
     queryKey: ["team", queryString],
-    queryFn: () => getItemsList(queryString),
+
+    queryFn: async () => {
+      if (!navigator.onLine) {
+        const cachedData = getCachedTeamList(queryString);
+
+        if (cachedData) {
+          return {
+            ...cachedData,
+            isCached: true,
+          };
+        }
+      }
+
+      
+      try {
+        return await getItemsList(queryString);
+      } catch (error) {
+        
+        const cachedData = getCachedTeamList(queryString);
+
+        if (cachedData) {
+          return {
+            ...cachedData,
+            isCached: true,
+          };
+        }
+
+        throw error;
+      }
+    },
   });
 
   const items = data?.data || [];
@@ -49,16 +99,18 @@ export default function Team() {
       if (id) {
         return updateItem(id, values);
       }
+
       return createItem(values);
     },
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team"] });
     },
   });
 
-  
   const deleteMutation = useMutation({
     mutationFn: deleteItem,
+
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["team"] });
     },
@@ -115,7 +167,17 @@ export default function Team() {
   return (
     <div className="team-page">
       <h1>Our Team</h1>
-      <p className="muted">Manage your startup team members.</p>
+      <p className="muted">
+        Manage your startup team members.
+      </p>
+
+      <div className={isOnline ? "online-status" : "offline-status"}>
+        {isOnline ? "You are online" : "You are offline"}
+
+        {data?.isCached && (
+          <p>Showing saved team data</p>
+        )}
+      </div>
 
       <div className="toolbar">
         <input
@@ -186,6 +248,7 @@ export default function Team() {
       {isError && (
         <div className="error-message">
           <p>{error.message}</p>
+
           <button className="retry-button" onClick={() => refetch()}>
             Retry
           </button>
