@@ -1,6 +1,5 @@
-const CACHE_NAME = "it-team-app-v10";
-
-const API_CACHE_NAME = "it-team-api-v1";
+const CACHE_NAME = "it-team-app-v14";
+const API_CACHE_NAME = "it-team-api-v4";
 const API_URL = "https://jsonplaceholder.typicode.com/posts";
 const API_MAX_ITEMS = 20;
 
@@ -18,6 +17,10 @@ const APP_SHELL = [
 
 
 async function cacheResponse(request, response) {
+  if (!response || !response.ok) {
+    throw new Error(`Cannot cache ${request}: ${response?.status ?? "no response"}`);
+  }
+
   const cache = await caches.open(CACHE_NAME);
   const headers = new Headers(response.headers);
 
@@ -29,8 +32,12 @@ async function cacheResponse(request, response) {
     headers
   });
 
-  await cache.put(request, responseWithDate);
-  await cleanCache();
+  // Use an absolute Request so Cache Storage uses the same key as fetch events.
+  const cacheRequest = request instanceof Request
+    ? request
+    : new Request(new URL(request, self.location.origin), { method: "GET" });
+
+  await cache.put(cacheRequest, responseWithDate);
 }
 
 
@@ -64,35 +71,41 @@ async function cleanCache() {
 
 
 async function getPrecacheAssets() {
-  const response = await fetch("/build-manifest.json");
+  try {
+    const response = await fetch("/build-manifest.json");
 
-  if (!response.ok) {
-    return APP_SHELL.filter(
-      (url) => url !== "/build-manifest.json"
-    );
-  }
+    console.log("Manifest status:", response.status);
 
-  const manifest = await response.json();
-  const files = new Set(APP_SHELL);
-
-  for (const entry of Object.values(manifest)) {
-    if (entry.file) {
-      files.add(`/${entry.file}`);
+    if (!response.ok) {
+      throw new Error("Manifest not found");
     }
 
-    (entry.css || []).forEach((file) => {
-      files.add(`/${file}`);
-    });
+    const manifest = await response.json();
+    console.log("Manifest content:", manifest);
 
-    (entry.assets || []).forEach((file) => {
-      files.add(`/${file}`);
-    });
+    const files = new Set(APP_SHELL);
+
+    const addAsset = (file) => {
+      if (!file || typeof file !== "string") return;
+      files.add(new URL(file, self.location.origin).pathname);
+    };
+
+    for (const entry of Object.values(manifest)) {
+      addAsset(entry.file);
+      (entry.css || []).forEach(addAsset);
+      (entry.assets || []).forEach(addAsset);
+    }
+
+    console.log("Assets to cache:", [...files]);
+    return [...files];
+  } catch (error) {
+    console.log("Manifest error:", error);
+
+    return [...APP_SHELL];
   }
-
-  return [...files];
 }
 
-//
+
 function addResponseHeaders(response, source, timestamp = false) {
   const headers = new Headers(response.headers);
 
@@ -135,32 +148,35 @@ async function cleanApiCache() {
 }
 
 
+
+
 self.addEventListener("install", (event) => {
   console.log("Service Worker: Installing");
 
   event.waitUntil(
     (async () => {
-      const cache = await caches.open(CACHE_NAME);
       const assets = await getPrecacheAssets();
 
-      await Promise.all(
-        assets.map(async (url) => {
-          try {
-            const response = await fetch(url);
+      console.log("Assets to cache:", assets);
 
-            if (response.ok) {
-              await cacheResponse(url, response);
-            }
-          } catch (error) {
-            console.log("Could not cache:", url);
-          }
-        })
-      );
+      // Do not hide a failed precache request. If one asset is unavailable,
+      // installation must fail instead of leaving a silently empty cache.
+      for (const url of assets) {
+        const response = await fetch(new Request(
+          new URL(url, self.location.origin),
+          { cache: "reload" }
+        ));
 
-      console.log("Service Worker: Assets cached");
+        await cacheResponse(url, response);
+        console.log("Cached:", url);
+      }
+
+      await cleanCache();
+      console.log("Service Worker: Assets cached", assets.length);
     })()
   );
 });
+
 
 
 self.addEventListener("activate", (event) => {
@@ -173,8 +189,10 @@ self.addEventListener("activate", (event) => {
           cacheNames
             .filter(
               (name) =>
-                name.startsWith("it-team-app-") &&
-                name !== CACHE_NAME
+                (name.startsWith("it-team-app-") ||
+                  name.startsWith("it-team-api-")) &&
+                name !== CACHE_NAME &&
+                name !== API_CACHE_NAME
             )
             .map((name) => caches.delete(name))
         );
@@ -182,7 +200,6 @@ self.addEventListener("activate", (event) => {
       .then(() => self.clients.claim())
   );
 });
-
 
 self.addEventListener("fetch", (event) => {
   const request = event.request;
@@ -192,8 +209,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  
-  if (requestUrl.href === API_URL) {
+
+  if (
+    requestUrl.origin === "https://jsonplaceholder.typicode.com" &&
+    requestUrl.pathname === "/posts"
+  ) {
     event.respondWith(
       (async () => {
         const cache = await caches.open(API_CACHE_NAME);
@@ -202,17 +222,19 @@ self.addEventListener("fetch", (event) => {
           const response = await fetch(request);
 
           if (response.ok) {
-            await cache.put(
-              request,
-              addResponseHeaders(response.clone(), "cache", true)
+            const cachedResponse = addResponseHeaders(
+              response.clone(),
+              "cache",
+              true
             );
 
+            await cache.put(API_URL, cachedResponse);
             await cleanApiCache();
           }
 
           return addResponseHeaders(response, "network");
-        } catch (error) {
-          const cachedResponse = await cache.match(request);
+        } catch {
+          const cachedResponse = await cache.match(API_URL);
 
           if (cachedResponse) {
             return addResponseHeaders(cachedResponse, "cache");
@@ -236,14 +258,14 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  
+ 
   if (requestUrl.origin !== self.location.origin) {
     return;
   }
 
   event.waitUntil(cleanCache());
 
-  // 
+  
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -268,7 +290,7 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 
+  
   if (
     ["script", "style", "image", "font"].includes(request.destination)
   ) {

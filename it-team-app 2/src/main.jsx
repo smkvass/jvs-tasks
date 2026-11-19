@@ -26,21 +26,17 @@ createRoot(document.getElementById("root")).render(
 );
 
 
-//Service Worker
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    if (import.meta.env.PROD) {
-      navigator.serviceWorker
-        .register("/sw.js")
-        .then((registration) => {
-  console.log("Service Worker registered:", registration);
-
-  registration.update();
-})
-        .catch((error) => {
-          console.error("Service Worker registration failed:", error);
-        });
-    }
+    navigator.serviceWorker
+      .register("/sw.js", { updateViaCache: "none" })
+      .then(registration => {
+        console.log("SW registered:", registration.scope);
+      })
+      .catch(error => {
+        console.error("SW registration error:", error);
+      });
   });
 }
+
 

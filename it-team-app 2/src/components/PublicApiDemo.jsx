@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 
 const API_URL = "https://jsonplaceholder.typicode.com/posts";
@@ -24,7 +25,11 @@ export default function PublicApiDemo() {
       setPosts(data.slice(0, 5));
       setIsCached(response.headers.get("X-Data-Source") === "cache");
     } catch {
-      setError("Unable to load posts.");
+      setError(
+        posts.length > 0
+          ? "Unable to refresh posts. Showing previously loaded data."
+          : "Unable to load posts. Please connect to the internet first."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -39,7 +44,11 @@ export default function PublicApiDemo() {
       <h2>Public API Demo</h2>
 
       {isLoading && <p>Loading posts...</p>}
-      {isCached && <p>Showing cached data (offline mode)</p>}
+
+      {isCached && (
+        <p>Showing cached data (offline mode)</p>
+      )}
+
       {error && <p>{error}</p>}
 
       {posts.map((post) => (
@@ -49,7 +58,9 @@ export default function PublicApiDemo() {
         </article>
       ))}
 
-      <button onClick={loadPosts}>Retry</button>
+      <button onClick={loadPosts} disabled={isLoading}>
+        Retry
+      </button>
     </section>
   );
 }
