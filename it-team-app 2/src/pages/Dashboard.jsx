@@ -1,77 +1,58 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { getItemsList } from "../services/Service.js";
+
+import { useAppDispatch, useAppSelector } from "../redux/hooks/hooks.js";
+
+import { fetchDashboard } from "../redux/dashboard/dashboardThunks.js";
+
+import {
+  setStatusFilter,
+} from "../redux/dashboard/dashboardSlice.js";
+
+import {
+  selectFilteredItems,
+  selectDashboardStats,
+  selectStatusFilter,
+  selectMembersByRole,
+} from "../redux/dashboard/dashboardSelectors.js";
+
 import Loader from "../components/Loader";
 import PublicApiDemo from "../components/PublicApiDemo";
 
 export default function Dashboard() {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [statusFilter, setStatusFilter] = useState("all");
+  const dispatch = useAppDispatch();
 
+  // Получаем состояние загрузки и ошибки
+  const { status, error } = useAppSelector(
+    (state) => state.dashboard
+  );
+
+  // Получаем данные через селекторы
+  const filteredItems = useAppSelector(selectFilteredItems);
+  const stats = useAppSelector(selectDashboardStats);
+  const statusFilter = useAppSelector(selectStatusFilter);
+  const roles = useAppSelector(selectMembersByRole);
+
+  // Загружаем данные при открытии Dashboard
   useEffect(() => {
-    let ignore = false;
+    dispatch(fetchDashboard());
+  }, [dispatch]);
 
-    async function loadData() {
-      try {
-        const result = await getItemsList("limit=1000");
-        if (!ignore) setItems(result.data);
-      } catch (err) {
-        if (!ignore) setError(err.message);
-      } finally {
-        if (!ignore) setLoading(false);
-      }
-    }
+  if (status === "loading" || status === "idle") {
+    return <Loader />;
+  }
 
-    loadData();
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
-  if (loading) return <Loader />;
-
-  if (error) {
+  if (status === "failed") {
     return (
       <div className="dashboard">
         <p className="error">Error: {error}</p>
-        <button onClick={() => window.location.reload()}>
+
+        <button onClick={() => dispatch(fetchDashboard())}>
           Retry
         </button>
       </div>
     );
   }
-
-  const filteredItems =
-    statusFilter === "all"
-      ? items
-      : items.filter((item) => item.status === statusFilter);
-
-  const total = filteredItems.length;
-  const available = filteredItems.filter(
-    (item) => item.status === "available"
-  ).length;
-  const working = filteredItems.filter(
-    (item) => item.status === "working"
-  ).length;
-  const onLeave = filteredItems.filter(
-    (item) => item.status === "on_leave"
-  ).length;
-
-  const averageExperience = total
-    ? (
-        filteredItems.reduce(
-          (sum, item) => sum + (Number(item.experience) || 0),
-          0
-        ) / total
-      ).toFixed(1)
-    : "0";
-
-  const roles = [...new Set(filteredItems.map(
-    (item) => item.role || "Not specified"
-  ))];
 
   return (
     <div className="dashboard">
@@ -82,7 +63,9 @@ export default function Dashboard() {
         Filter by status:{" "}
         <select
           value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
+          onChange={(e) =>
+            dispatch(setStatusFilter(e.target.value))
+          }
         >
           <option value="all">All statuses</option>
           <option value="available">Available</option>
@@ -94,47 +77,49 @@ export default function Dashboard() {
       <div className="stats-grid">
         <div className="stat-card">
           <h3>Total Members</h3>
-          <h2>{total}</h2>
+          <h2>{stats.total}</h2>
         </div>
+
         <div className="stat-card">
           <h3>Available</h3>
-          <h2>{available}</h2>
+          <h2>{stats.available}</h2>
         </div>
+
         <div className="stat-card">
           <h3>Working</h3>
-          <h2>{working}</h2>
+          <h2>{stats.working}</h2>
         </div>
+
         <div className="stat-card">
           <h3>On Leave</h3>
-          <h2>{onLeave}</h2>
+          <h2>{stats.onLeave}</h2>
         </div>
+
         <div className="stat-card">
           <h3>Average Experience</h3>
-          <h2>{averageExperience} years</h2>
+          <h2>{stats.averageExperience} years</h2>
         </div>
       </div>
 
       <section>
         <h2>Members by Status</h2>
         <ul>
-          <li>Available: {available}</li>
-          <li>Working: {working}</li>
-          <li>On Leave: {onLeave}</li>
+          <li>Available: {stats.available}</li>
+          <li>Working: {stats.working}</li>
+          <li>On Leave: {stats.onLeave}</li>
         </ul>
       </section>
 
       <section>
         <h2>Members by Role</h2>
-        {roles.length === 0 ? (
+
+        {Object.keys(roles).length === 0 ? (
           <p>No members found.</p>
         ) : (
           <ul>
-            {roles.map((role) => (
+            {Object.entries(roles).map(([role, count]) => (
               <li key={role}>
-                {role}:{" "}
-                {filteredItems.filter(
-                  (item) => (item.role || "Not specified") === role
-                ).length}
+                {role}: {count}
               </li>
             ))}
           </ul>
@@ -143,13 +128,20 @@ export default function Dashboard() {
 
       <section>
         <h2>Team Members</h2>
-        {filteredItems.length === 0 ? (
-          <p>No members match this status.</p>
-        ) : (
+
+          {filteredItems.length === 0 ? (
+          <p>
+          {stats.total === 0
+           ? "No team members yet. Add your first member!"
+            : "No members match this status."}
+          </p>
+          ) : (
           <ul>
             {filteredItems.map((item) => (
               <li key={item.id}>
-                <Link to={`/team/${item.id}`}>{item.name}</Link>
+                <Link to={`/team/${item.id}`}>
+                  {item.name} {item.lastName || ""}
+                </Link>
                 {" — "}
                 {item.role || "No role specified"}
               </li>

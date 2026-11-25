@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 
 const API_URL = "https://jsonplaceholder.typicode.com/posts";

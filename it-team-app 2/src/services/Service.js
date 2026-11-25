@@ -1,4 +1,3 @@
-
 import { API_CONFIG, DATA_KEY } from "../api/settings.js";
 import { initialDataSample } from "../api/initial-data-sample.js";
 
@@ -17,7 +16,7 @@ function fakeRequest(operation, options = {}) {
 
     setTimeout(() => {
       if (Math.random() < errorChance) {
-        reject(new Error("Simulated server Error"));
+        reject(new Error("Something went wrong. Please try again."));
         return;
       }
 
@@ -30,14 +29,21 @@ function fakeRequest(operation, options = {}) {
   });
 }
 
-function initializeDatabase() {
-  if (!localStorage.getItem(DATA_KEY)) {
-    localStorage.setItem(DATA_KEY, JSON.stringify(initialDataSample));
-  }
-}
 
 function readData() {
-  return JSON.parse(localStorage.getItem(DATA_KEY) || "[]");
+  const storedData = localStorage.getItem(DATA_KEY);
+
+  if (!storedData) {
+    localStorage.setItem(DATA_KEY, JSON.stringify(initialDataSample));
+    return initialDataSample;
+  }
+
+  try {
+    return JSON.parse(storedData);
+  } catch {
+    localStorage.setItem(DATA_KEY, JSON.stringify(initialDataSample));
+    return initialDataSample;
+  }
 }
 
 function writeData(items) {
@@ -49,71 +55,96 @@ function saveTeamCache(items) {
   localStorage.setItem(TEAM_CACHE_KEY, JSON.stringify(items));
 }
 
-export function getCachedTeamList(query = "") {
-  const cached = localStorage.getItem(TEAM_CACHE_KEY);
 
-  if (!cached) return null;
-
-  let items;
-
-  try {
-    items = JSON.parse(cached);
-  } catch {
-    return null;
-  }
-
+function getQueryOptions(query = "") {
   const params = new URLSearchParams(query);
 
-  const search = (params.get("search") || "").toLowerCase();
-  const status = params.get("status") || "all";
-  const role = params.get("role") || "all";
-  const sort = params.get("sort") || "name";
-  const page = Math.max(1, Number(params.get("page")) || 1);
-  const limit = Number(params.get("limit")) || 3;
+  return {
+    search: (params.get("search") || "").toLowerCase(),
+    status: params.get("status") || "all",
+    role: params.get("role") || "all",
+    sort: params.get("sort") || "name",
+    page: Math.max(1, Number(params.get("page")) || 1),
+    limit: Math.max(1, Number(params.get("limit")) || 3),
+  };
+}
 
 
+function processTeamList(items, query = "") {
+  const {
+    search,
+    status,
+    role,
+    sort,
+    page,
+    limit,
+  } = getQueryOptions(query);
+
+  let filteredItems = [...items];
+
+ 
   if (search) {
-    items = items.filter(
-      (item) =>
-        item.name.toLowerCase().includes(search) ||
+    filteredItems = filteredItems.filter((item) => {
+      return (
+        (item.name || "").toLowerCase().includes(search) ||
+        (item.lastName || "").toLowerCase().includes(search) ||
         (item.description || "").toLowerCase().includes(search)
-    );
+      );
+    });
   }
 
   
   if (status !== "all") {
-    items = items.filter((item) => item.status === status);
+    filteredItems = filteredItems.filter(
+      (item) => item.status === status
+    );
   }
 
   
   if (role !== "all") {
-    items = items.filter((item) => item.role === role);
+    filteredItems = filteredItems.filter(
+      (item) => item.role === role
+    );
   }
 
-  
-  items = [...items].sort((a, b) => {
+
+  filteredItems.sort((a, b) => {
     switch (sort) {
+      case "name":
+        return (a.name || "").localeCompare(b.name || "");
+
       case "name-desc":
-        return b.name.localeCompare(a.name);
+        return (b.name || "").localeCompare(a.name || "");
 
       case "experience":
-        return a.experience - b.experience;
+        return (
+          (Number(a.experience) || 0) -
+          (Number(b.experience) || 0)
+        );
 
       case "experience-desc":
-        return b.experience - a.experience;
+        return (
+          (Number(b.experience) || 0) -
+          (Number(a.experience) || 0)
+        );
 
       default:
-        return a.name.localeCompare(b.name);
+        return 0;
     }
   });
 
   
-  const total = items.length;
+  const total = filteredItems.length;
   const totalPages = Math.ceil(total / limit);
-  const start = (page - 1) * limit;
+  const startIndex = (page - 1) * limit;
+
+  const paginatedItems = filteredItems.slice(
+    startIndex,
+    startIndex + limit
+  );
 
   return {
-    data: items.slice(start, start + limit),
+    data: paginatedItems,
     total,
     page,
     limit,
@@ -121,88 +152,69 @@ export function getCachedTeamList(query = "") {
   };
 }
 
-initializeDatabase();
+
+export function getCachedTeamList(query = "") {
+  const cachedData = localStorage.getItem(TEAM_CACHE_KEY);
+
+  if (!cachedData) {
+    return null;
+  }
+
+  try {
+    const items = JSON.parse(cachedData);
+
+    if (!Array.isArray(items)) {
+      return null;
+    }
+
+    return {
+      ...processTeamList(items, query),
+      isCached: true,
+    };
+  } catch {
+    return null;
+  }
+}
+
+
+export function getCachedDashboardList() {
+  const cachedData = localStorage.getItem(TEAM_CACHE_KEY);
+
+  if (!cachedData) {
+    return null;
+  }
+
+  try {
+    const items = JSON.parse(cachedData);
+    return Array.isArray(items) ? items : null;
+  } catch {
+    return null;
+  }
+}
 
 
 export async function getItemsList(query = "") {
   return fakeRequest(() => {
-    const params = new URLSearchParams(query);
+    const items = readData();
 
-    const search = params.get("search") || "";
-    const status = params.get("status") || "all";
-    const role = params.get("role") || "all";
-    const sort = params.get("sort") || "name";
-    const page = Math.max(1, Number(params.get("page")) || 1);
-    const limit = Number(params.get("limit")) || 3;
+    saveTeamCache(items);
 
-    
-    const allItems = readData();
-
-    
-    saveTeamCache(allItems);
-
-    let items = [...allItems];
-
-    
-    if (search) {
-      items = items.filter(
-        (item) =>
-          item.name.toLowerCase().includes(search.toLowerCase()) ||
-          (item.description || "").toLowerCase().includes(search.toLowerCase())
-      );
-    }
-
-    
-    if (status !== "all") {
-      items = items.filter((item) => item.status === status);
-    }
-
-    
-    if (role !== "all") {
-      items = items.filter((item) => item.role === role);
-    }
-
-    
-    items = [...items].sort((a, b) => {
-      switch (sort) {
-        case "name-desc":
-          return b.name.localeCompare(a.name);
-
-        case "experience":
-          return a.experience - b.experience;
-
-        case "experience-desc":
-          return b.experience - a.experience;
-
-        default:
-          return a.name.localeCompare(b.name);
-      }
-    });
-
-    
-    const total = items.length;
-    const totalPages = Math.ceil(total / limit);
-    const start = (page - 1) * limit;
-
-    return {
-      data: items.slice(start, start + limit),
-      total,
-      page,
-      limit,
-      totalPages,
-    };
-  }, { errorChance: 0 });
+    return processTeamList(items, query);
+  }, {
+    errorChance: 0,
+  });
 }
-
 
 export async function getItem(id) {
   return fakeRequest(() => {
     const items = readData();
 
-    const item = items.find((item) => item.id === Number(id));
+    const item = items.find(
+      (member) => String(member.id) === String(id)
+    );
 
     if (!item) {
-      throw new Error("Item not found");
+      throw new Error("Member not found");
     }
 
     return item;
@@ -214,14 +226,9 @@ export async function createItem(data) {
   return fakeRequest(() => {
     const items = readData();
 
-    const nextId =
-      items.length > 0
-        ? Math.max(...items.map((item) => Number(item.id))) + 1
-        : 1;
-
     const newItem = {
       ...data,
-      id: nextId,
+      id: Date.now().toString(),
     };
 
     const updatedItems = [...items, newItem];
@@ -233,55 +240,52 @@ export async function createItem(data) {
   });
 }
 
-// UPDATE TEAM MEMBER
+
 export async function updateItem(id, changes) {
   return fakeRequest(() => {
-    const numericId = Number(id);
     const items = readData();
 
-    const exists = items.some((item) => item.id === numericId);
+    const index = items.findIndex(
+      (item) => String(item.id) === String(id)
+    );
 
-    if (!exists) {
-      throw new Error("Item not found");
+    if (index === -1) {
+      throw new Error("Member not found");
     }
 
-    const updatedItems = items.map((item) =>
-      item.id === numericId
-        ? {
-            ...item,
-            ...changes,
-            id: numericId,
-          }
-        : item
-    );
+    const updatedItem = {
+      ...items[index],
+      ...changes,
+      id: items[index].id,
+    };
+
+    const updatedItems = [...items];
+
+    updatedItems[index] = updatedItem;
 
     writeData(updatedItems);
     saveTeamCache(updatedItems);
 
-    return updatedItems.find((item) => item.id === numericId);
+    return updatedItem;
   });
 }
 
 
 export async function deleteItem(id) {
   return fakeRequest(() => {
-    const numericId = Number(id);
     const items = readData();
 
-    const exists = items.some((item) => item.id === numericId);
+    const updatedItems = items.filter(
+      (item) => String(item.id) !== String(id)
+    );
 
-    if (!exists) {
-      throw new Error("Item not found");
+    if (updatedItems.length === items.length) {
+      throw new Error("Member not found");
     }
-
-    const updatedItems = items.filter((item) => item.id !== numericId);
 
     writeData(updatedItems);
     saveTeamCache(updatedItems);
 
-    return {
-      success: true,
-      id: numericId,
-    };
+    return { id };
   });
 }

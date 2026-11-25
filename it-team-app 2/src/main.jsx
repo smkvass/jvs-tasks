@@ -4,6 +4,8 @@ import App from "./App.jsx";
 import { AuthProvider } from "./context/AuthContext";
 import "./App.css";
 import UpdateNotification from "./components/UpdateNotification";
+import { Provider } from "react-redux";
+import { store } from "./redux/store";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -17,16 +19,18 @@ const queryClient = new QueryClient({
 });
 
 createRoot(document.getElementById("root")).render(
-  <QueryClientProvider client={queryClient}>
-    <AuthProvider>
-      <App />
-      <UpdateNotification />
-    </AuthProvider>
-  </QueryClientProvider>
+  <Provider store={store}>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <App />
+        <UpdateNotification />
+      </AuthProvider>
+    </QueryClientProvider>
+  </Provider>
 );
 
 
-if ("serviceWorker" in navigator) {
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
   window.addEventListener("load", () => {
     navigator.serviceWorker
       .register("/sw.js", { updateViaCache: "none" })

@@ -1,65 +1,81 @@
-
 import { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 import Loader from "../components/Loader";
-import { getItem, updateItem } from "../services/Service.js";
+
+import { useAppDispatch, useAppSelector } from "../redux/hooks/hooks.js";
+
+import { fetchMember } from "../redux/member/memberThunks.js";
+import { clearMember } from "../redux/member/memberSlice.js";
+import { editTeamMember } from "../redux/team/teamThunks.js";
+import { fetchDashboard } from "../redux/dashboard/dashboardThunks.js";
 
 export default function MemberDetails() {
   const { id } = useParams();
-  const queryClient = useQueryClient();
+  const dispatch = useAppDispatch();
+
+  const {
+    currentMember: member,
+    status,
+    error,
+    updateStatus,
+    updateError,
+  } = useAppSelector((state) => state.member);
 
   const [newStatus, setNewStatus] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
 
-  const {
-    data: member,
-    isLoading,
-    isError,
-    error,
-  } = useQuery({
-    queryKey: ["team-member", id],
-    queryFn: () => getItem(id),
-  });
+  // Загружаем участника при открытии страницы
+  useEffect(() => {
+    dispatch(fetchMember(id));
 
+    return () => {
+      dispatch(clearMember());
+    };
+  }, [dispatch, id]);
 
-  const updateMutation = useMutation({
-    mutationFn: (status) => updateItem(id, { status }),
-
-    onSuccess: (updatedMember) => {
-      queryClient.setQueryData(
-        ["team-member", id],
-        updatedMember
-      );
-
-      queryClient.invalidateQueries({
-        queryKey: ["team"],
-      });
-
-      setSaveMessage("Status updated successfully!");
-    },
-
-    onError: (err) => {
-      setSaveMessage("Error: " + err.message);
-    },
-  });
-
-  
+  // Устанавливаем текущий статус в select
   useEffect(() => {
     if (member) {
-      setNewStatus(member.status);
+      setNewStatus(member.status || "available");
     }
-  }, [member]);
+  }, [member?.status]);
 
   async function handleSave() {
     setSaveMessage("");
-    updateMutation.mutate(newStatus);
+
+    try {
+  await dispatch(
+    editTeamMember({
+      id,
+      changes: { status: newStatus },
+    })
+  ).unwrap();
+
+  dispatch(fetchDashboard());
+
+  setSaveMessage("Status updated successfully!");
+} catch (err) {
+  setSaveMessage(
+    "Error: " +
+      (typeof err === "string"
+        ? err
+        : err.message || "Failed to update status")
+  );
+}
   }
 
-  if (isLoading) return <Loader />;
-  if (isError) return <p>Error: {error.message}</p>;
-  if (!member) return <h2>Member not found</h2>;
+  if (status === "loading" || status === "idle") {
+    return <Loader />;
+  }
+
+  if (status === "failed") {
+    return <p>Error: {error}</p>;
+  }
+
+  if (!member) {
+    return <h2>Member not found</h2>;
+  }
 
   return (
     <div className="member-details">
@@ -74,7 +90,9 @@ export default function MemberDetails() {
           </div>
 
           <div>
-            <h1>{member.name}</h1>
+            <h1>
+                {member.name} {member.lastName || ""}
+            </h1>
             <p>{member.role}</p>
 
             <span className={`badge ${member.status || "available"}`}>
@@ -104,14 +122,15 @@ export default function MemberDetails() {
             <button
               onClick={handleSave}
               disabled={
-                updateMutation.isPending ||
+                updateStatus === "loading" ||
                 newStatus === member.status
               }
             >
-              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+              {updateStatus === "loading" ? "Saving..." : "Save Changes"}
             </button>
 
             {saveMessage && <p>{saveMessage}</p>}
+            {updateError && <p>Error: {updateError}</p>}
           </div>
 
           <div>
